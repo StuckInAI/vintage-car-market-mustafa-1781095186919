@@ -3,7 +3,7 @@ export interface User {
   username: string;
   email: string;
   password: string;
-  role: 'buyer' | 'seller' | 'admin';
+  role: 'buyer' | 'seller' | 'both';
   createdAt: number;
 }
 
@@ -30,16 +30,16 @@ export interface CarListing {
   cylinders: string;
   horsepower?: string;
   color: string;
-  interiorColor: string;
-  doors: string;
+  interiorColor?: string;
+  doors?: string;
   features: string[];
   price: number;
   negotiable: boolean;
   description: string;
   location: string;
   sellerName: string;
-  sellerContact: string;
-  sellerEmail: string;
+  sellerContact?: string;
+  sellerEmail?: string;
   images: string[];
   createdAt: number;
   sellerId: string;
