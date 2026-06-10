@@ -1,2 +1,1 @@
-// Redirect to CarDetailPage
-export { default } from '@/pages/CarDetailPage';
+export { default } from './CarDetailPage';

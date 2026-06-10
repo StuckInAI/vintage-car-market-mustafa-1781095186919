@@ -62,7 +62,7 @@ export interface AuctionListing extends BaseListing {
   reservePrice: number;
   startingBid: number;
   currentBid: number;
-  currentBidder: string | null;
+  currentBidder: string;
   currentBidderName: string;
   auctionDurationHours: number;
   auctionEndTime: number;

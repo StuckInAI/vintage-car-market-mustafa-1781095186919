@@ -1,2 +1,1 @@
-// Redirect to BrowsePage
-export { default } from '@/pages/BrowsePage';
+export { default } from './BrowsePage';
