@@ -3,7 +3,7 @@ export interface User {
   username: string;
   email: string;
   password: string;
-  role: 'buyer' | 'seller' | 'admin';
+  role: 'buyer' | 'seller' | 'both';
   createdAt: number;
 }
 
@@ -62,7 +62,7 @@ export interface AuctionListing extends BaseListing {
   reservePrice: number;
   startingBid: number;
   currentBid: number;
-  currentBidder: string | null;
+  currentBidder: string;
   currentBidderName: string;
   auctionDurationHours: number;
   auctionEndTime: number;
@@ -83,6 +83,6 @@ export interface FilterState {
   transmission: string;
   fuelType: string;
   driveType: string;
-  location: string;
   condition: string;
+  location: string;
 }

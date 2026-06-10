@@ -7,22 +7,17 @@
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #0f0f1a;
   color: #e8e8e8;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .vintage-card {
   background: linear-gradient(135deg, #1e1e32 0%, #16162a 100%);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.vintage-card:hover {
-  box-shadow: 0 8px 32px rgba(201, 162, 39, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
 .ornament-line {
-  border: none;
   height: 1px;
   background: linear-gradient(to right, transparent, #c9a227, transparent);
 }

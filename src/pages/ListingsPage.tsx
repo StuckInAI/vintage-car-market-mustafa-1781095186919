@@ -1,3 +1,1 @@
-export default function ListingsPage() {
-  return <div>Listings</div>;
-}
+export { default } from './BrowsePage';
