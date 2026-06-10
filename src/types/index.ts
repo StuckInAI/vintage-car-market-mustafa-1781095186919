@@ -3,7 +3,7 @@ export interface User {
   username: string;
   email: string;
   password: string;
-  role: 'buyer' | 'seller' | 'both';
+  role: 'buyer' | 'seller' | 'admin';
   createdAt: number;
 }
 
@@ -59,8 +59,6 @@ export interface AuctionListing extends CarListing {
   currentBid: number;
   currentBidder: string;
   currentBidderName: string;
-  highestBidderId?: string;
-  highestBidderName?: string;
   auctionDurationHours: number;
   auctionEndTime: number;
   auctionActive: boolean;
@@ -80,11 +78,7 @@ export interface FilterState {
   transmission: string;
   fuelType: string;
   driveType: string;
-  drivetrain?: string;
   color: string;
   location: string;
   searchText: string;
 }
-
-export type CarFilters = FilterState;
-export type SortOption = string;
