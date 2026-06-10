@@ -62,7 +62,7 @@ export interface AuctionListing extends BaseListing {
   reservePrice: number;
   startingBid: number;
   currentBid: number;
-  currentBidder: string;
+  currentBidder: string | null;
   currentBidderName: string;
   auctionDurationHours: number;
   auctionEndTime: number;
@@ -83,6 +83,6 @@ export interface FilterState {
   transmission: string;
   fuelType: string;
   driveType: string;
-  condition: string;
   location: string;
+  condition: string;
 }

@@ -1,1 +1,3 @@
-export { default } from './CarDetailPage';
+export default function ListingDetailPage() {
+  return <div>Listing Detail</div>;
+}

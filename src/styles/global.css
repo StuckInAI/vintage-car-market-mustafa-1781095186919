@@ -7,50 +7,31 @@
 }
 
 body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #0f0f1a;
   color: #e8e8e8;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  -webkit-font-smoothing: antialiased;
 }
 
 .vintage-card {
   background: linear-gradient(135deg, #1e1e32 0%, #16162a 100%);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-  transition: box-shadow 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .vintage-card:hover {
-  box-shadow: 0 8px 30px rgba(201, 162, 39, 0.2);
+  box-shadow: 0 8px 32px rgba(201, 162, 39, 0.2);
 }
 
 .ornament-line {
+  border: none;
   height: 1px;
-  background: linear-gradient(90deg, transparent, #c9a227, transparent);
+  background: linear-gradient(to right, transparent, #c9a227, transparent);
 }
 
-@keyframes auction-pulse {
+@keyframes pulse-auction {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
 }
 
 .auction-pulse {
-  animation: auction-pulse 1.5s ease-in-out infinite;
-}
-
-select option {
-  background-color: #1a1a2e;
-  color: #e8e8e8;
-}
-
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #0f0f1a;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #c9a227;
-  border-radius: 3px;
+  animation: pulse-auction 1.5s ease-in-out infinite;
 }
