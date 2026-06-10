@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-gold: #c9a227;
+  --color-brand-dark: #1a1a2e;
+  --color-brand-darker: #0f0f1a;
+  --color-brand-accent: #e8b84b;
+  --color-brand-light: #f5f0e8;
+  --color-brand-red: #8b1a1a;
+  --color-brand-green: #1a5c1a;
+}
+
+body {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  background-color: #0f0f1a;
+  color: #e8e8e8;
+}
+
+.vintage-border {
+  border: 2px solid #c9a227;
+  box-shadow: 0 0 10px rgba(201, 162, 39, 0.3), inset 0 0 10px rgba(201, 162, 39, 0.05);
+}
+
+.gold-text {
+  color: #c9a227;
+}
+
+.vintage-card {
+  background: linear-gradient(135deg, #1e1e32 0%, #16162a 100%);
+  border: 1px solid rgba(201, 162, 39, 0.4);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.auction-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .5; }
+}
+
+.ornament-line {
+  background: linear-gradient(to right, transparent, #c9a227, transparent);
+  height: 1px;
+  width: 100%;
+}
+
+.hero-gradient {
+  background: linear-gradient(to bottom, rgba(15,15,26,0) 0%, rgba(15,15,26,0.8) 60%, rgba(15,15,26,1) 100%);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #1a1a2e; }
+::-webkit-scrollbar-thumb { background: #c9a227; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #e8b84b; }
