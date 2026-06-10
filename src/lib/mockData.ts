@@ -1,2 +1,2 @@
-// This file is intentionally empty - mock data has been moved to ListingsContext.tsx
+// Mock data is now embedded in ListingsContext
 export {};

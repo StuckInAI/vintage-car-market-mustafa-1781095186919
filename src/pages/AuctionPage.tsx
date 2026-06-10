@@ -1,48 +1,68 @@
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Gavel, Plus } from 'lucide-react';
 import { useListings } from '@/context/ListingsContext';
 import AuctionCard from '@/components/AuctionCard';
-import { Gavel } from 'lucide-react';
 
 export default function AuctionPage() {
   const { auctions } = useListings();
+  const [showActive, setShowActive] = useState(true);
 
-  const now = Date.now();
-  const liveAuctions = auctions.filter(a => a.auctionActive && now < a.auctionEndTime);
-  const upcomingAuctions = auctions.filter(a => a.auctionActive && now >= a.auctionEndTime - 3600000 * 24 && now < a.auctionEndTime);
-  const endedAuctions = auctions.filter(a => !a.auctionActive || now >= a.auctionEndTime);
+  const filtered = auctions.filter((a) =>
+    showActive ? a.auctionActive && Date.now() < a.auctionEndTime : !a.auctionActive || Date.now() >= a.auctionEndTime
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="mb-6">
+      <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold flex items-center gap-2" style={{ color: '#c9a227', fontFamily: 'Georgia, serif' }}>
           <Gavel size={28} /> Live Auctions
         </h1>
-        <p className="text-sm mt-1" style={{ color: '#a0a0a0' }}>Bid on exceptional vintage automobiles in real time.</p>
-        <div className="ornament-line mt-3"></div>
+        <Link
+          to="/sell"
+          className="flex items-center gap-2 px-4 py-2 rounded font-semibold text-sm transition-colors"
+          style={{ backgroundColor: '#c9a227', color: '#1a1a2e' }}
+        >
+          <Plus size={16} /> List for Auction
+        </Link>
       </div>
 
-      {liveAuctions.length === 0 && (
+      <div className="flex gap-3 mb-6">
+        <button
+          onClick={() => setShowActive(true)}
+          className="px-4 py-2 rounded text-sm font-semibold transition-colors"
+          style={{
+            backgroundColor: showActive ? '#c9a227' : 'transparent',
+            color: showActive ? '#1a1a2e' : '#c9a227',
+            border: '1px solid #c9a227',
+          }}
+        >
+          Active Auctions ({auctions.filter((a) => a.auctionActive && Date.now() < a.auctionEndTime).length})
+        </button>
+        <button
+          onClick={() => setShowActive(false)}
+          className="px-4 py-2 rounded text-sm font-semibold transition-colors"
+          style={{
+            backgroundColor: !showActive ? '#c9a227' : 'transparent',
+            color: !showActive ? '#1a1a2e' : '#c9a227',
+            border: '1px solid #c9a227',
+          }}
+        >
+          Ended Auctions
+        </button>
+      </div>
+
+      {filtered.length === 0 ? (
         <div className="text-center py-16" style={{ color: '#a0a0a0' }}>
-          <p className="text-xl mb-2">No live auctions at this time.</p>
-          <p className="text-sm">Check back soon or <a href="/sell" style={{ color: '#c9a227' }}>start your own auction</a>.</p>
+          <Gavel size={48} className="mx-auto mb-4 opacity-30" />
+          <p className="text-xl">No {showActive ? 'active' : 'ended'} auctions found.</p>
         </div>
-      )}
-
-      {liveAuctions.length > 0 && (
-        <section className="mb-12">
-          <h2 className="text-xl font-bold mb-4" style={{ color: '#e8e8e8' }}>Active Now</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {liveAuctions.map((a) => <AuctionCard key={a.id} auction={a} />)}
-          </div>
-        </section>
-      )}
-
-      {endedAuctions.length > 0 && (
-        <section>
-          <h2 className="text-xl font-bold mb-4" style={{ color: '#e8e8e8' }}>Ended Auctions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {endedAuctions.map((a) => <AuctionCard key={a.id} auction={a} />)}
-          </div>
-        </section>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filtered.map((auction) => (
+            <AuctionCard key={auction.id} auction={auction} />
+          ))}
+        </div>
       )}
     </div>
   );

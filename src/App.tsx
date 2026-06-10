@@ -6,6 +6,7 @@ import HomePage from '@/pages/HomePage';
 import BrowsePage from '@/pages/BrowsePage';
 import CarDetailPage from '@/pages/CarDetailPage';
 import SellCarPage from '@/pages/SellCarPage';
+import AuctionPage from '@/pages/AuctionPage';
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
               <Route path="browse" element={<BrowsePage />} />
               <Route path="car/:id" element={<CarDetailPage />} />
               <Route path="sell" element={<SellCarPage />} />
+              <Route path="auction" element={<AuctionPage />} />
             </Route>
           </Routes>
         </BrowserRouter>

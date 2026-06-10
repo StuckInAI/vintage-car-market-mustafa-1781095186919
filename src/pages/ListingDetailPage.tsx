@@ -1,2 +1,2 @@
-// Alias for CarDetailPage
-export { default } from './CarDetailPage';
+// Redirect to CarDetailPage
+export { default } from '@/pages/CarDetailPage';

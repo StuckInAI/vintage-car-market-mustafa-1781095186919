@@ -3,7 +3,7 @@ export interface User {
   username: string;
   email: string;
   password: string;
-  role: 'buyer' | 'seller' | 'both';
+  role: 'buyer' | 'seller' | 'admin';
   createdAt: number;
 }
 
@@ -12,7 +12,15 @@ export interface AuthState {
   isAuthenticated: boolean;
 }
 
-export interface CarListing {
+export interface Bid {
+  id: string;
+  bidderId: string;
+  bidderName: string;
+  amount: number;
+  timestamp: number;
+}
+
+export interface BaseListing {
   id: string;
   listingType: 'sale' | 'auction';
   make: string;
@@ -38,26 +46,23 @@ export interface CarListing {
   description: string;
   location: string;
   sellerName: string;
-  sellerContact?: string;
-  sellerEmail?: string;
+  sellerContact: string;
+  sellerEmail: string;
   images: string[];
   createdAt: number;
   sellerId: string;
 }
 
-export interface Bid {
-  id: string;
-  bidderId: string;
-  bidderName: string;
-  amount: number;
-  timestamp: number;
+export interface CarListing extends BaseListing {
+  listingType: 'sale';
 }
 
-export interface AuctionListing extends CarListing {
+export interface AuctionListing extends BaseListing {
+  listingType: 'auction';
   reservePrice: number;
   startingBid: number;
   currentBid: number;
-  currentBidder: string;
+  currentBidder: string | null;
   currentBidderName: string;
   auctionDurationHours: number;
   auctionEndTime: number;
@@ -66,6 +71,7 @@ export interface AuctionListing extends CarListing {
 }
 
 export interface FilterState {
+  searchText: string;
   make: string;
   model: string;
   yearMin: string;
@@ -73,12 +79,10 @@ export interface FilterState {
   priceMin: string;
   priceMax: string;
   mileageMax: string;
-  condition: string;
   bodyStyle: string;
   transmission: string;
   fuelType: string;
   driveType: string;
-  color: string;
+  condition: string;
   location: string;
-  searchText: string;
 }

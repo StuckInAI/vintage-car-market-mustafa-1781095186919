@@ -1,2 +1,2 @@
-// Stub file - storage logic is handled in ListingsContext and useLocalStorage
+// Storage helpers - using localStorage directly in context
 export {};
