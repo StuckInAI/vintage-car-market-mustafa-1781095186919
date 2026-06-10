@@ -1,93 +1,60 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, Plus, X, CheckCircle2, ChevronRight, ChevronLeft } from 'lucide-react';
+import { PlusCircle, X, Gavel, Car } from 'lucide-react';
 import { useListings } from '@/context/ListingsContext';
 import { useAuth } from '@/hooks/useAuth';
-import type { CarListing } from '@/types';
+import type { CarListing, AuctionListing } from '@/types';
 import {
-  CAR_MAKES, BODY_STYLES, TRANSMISSIONS, FUEL_TYPES, DRIVE_TYPES,
-  CONDITIONS, CYLINDER_OPTIONS, DOOR_OPTIONS, EXTERIOR_COLORS,
-  INTERIOR_COLORS, CAR_FEATURES
+  CAR_MAKES, BODY_STYLES, TRANSMISSIONS, FUEL_TYPES,
+  DRIVE_TYPES, CONDITIONS, CYLINDER_OPTIONS, DOOR_OPTIONS,
+  EXTERIOR_COLORS, INTERIOR_COLORS, CAR_FEATURES, AUCTION_DURATIONS
 } from '@/lib/constants';
 import { generateId } from '@/lib/utils';
 
-type CarCondition = CarListing['condition'];
-type CarTransmission = CarListing['transmission'];
-type CarFuelType = CarListing['fuelType'];
-type CarBodyStyle = CarListing['bodyStyle'];
-type CarDriveType = CarListing['driveType'];
-
-type FormData = {
-  make: string;
-  model: string;
-  year: number;
-  trim: string;
-  vin: string;
-  mileage: number;
-  condition: CarCondition;
-  transmission: CarTransmission;
-  fuelType: CarFuelType;
-  bodyStyle: CarBodyStyle;
-  driveType: CarDriveType;
-  engineSize: string;
-  cylinders: string;
-  horsepower: number;
-  color: string;
-  exteriorColor: string;
-  interiorColor: string;
-  doors: string;
-  features: string[];
-  price: number;
-  negotiable: boolean;
-  description: string;
-  location: string;
-  sellerName: string;
-  sellerPhone: string;
-  sellerEmail: string;
-  images: string[];
-  title: string;
-};
-
-const defaultForm: FormData = {
-  make: '',
-  model: '',
-  year: 1965,
-  trim: '',
-  vin: '',
-  mileage: 0,
-  condition: 'Good',
-  transmission: 'Manual',
-  fuelType: 'Gasoline',
-  bodyStyle: 'Sedan',
-  driveType: 'RWD',
-  engineSize: '',
-  cylinders: '',
-  horsepower: 0,
-  color: '',
-  exteriorColor: '',
-  interiorColor: '',
-  doors: '2',
-  features: [],
-  price: 0,
-  negotiable: false,
-  description: '',
-  location: '',
-  sellerName: '',
-  sellerPhone: '',
-  sellerEmail: '',
-  images: [],
-  title: '',
-};
+type ListingMode = 'sale' | 'auction';
 
 export default function SellCarPage() {
   const navigate = useNavigate();
-  const { addListing } = useListings();
+  const { addListing, addAuction } = useListings();
   const { user } = useAuth();
+  const [mode, setMode] = useState<ListingMode>('sale');
   const [step, setStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
-  const [form, setForm] = useState<FormData>(defaultForm);
 
-  const set = <K extends keyof FormData>(key: K, value: FormData[K]) => {
+  const [form, setForm] = useState({
+    make: '',
+    model: '',
+    year: new Date().getFullYear().toString(),
+    trim: '',
+    vin: '',
+    mileage: '',
+    condition: 'Good',
+    transmission: 'Manual',
+    fuelType: 'Gasoline',
+    bodyStyle: 'Coupe',
+    driveType: 'RWD',
+    engineSize: '',
+    cylinders: 'V8',
+    horsepower: '',
+    color: '',
+    interiorColor: '',
+    doors: '2',
+    features: [] as string[],
+    price: '',
+    negotiable: false,
+    description: '',
+    location: '',
+    sellerName: user?.username || '',
+    sellerContact: '',
+    sellerEmail: user?.email || '',
+    images: [] as string[],
+    // Auction fields
+    reservePrice: '',
+    startingBid: '',
+    auctionDurationHours: 24,
+  });
+
+  const update = (key: string, value: any) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -101,16 +68,15 @@ export default function SellCarPage() {
   };
 
   const handleSubmit = () => {
-    const title = form.title || `${form.year} ${form.make} ${form.model}`;
-    const listing: CarListing = {
+    const baseData: CarListing = {
       id: generateId('car'),
-      listingType: 'sale',
+      listingType: mode,
       make: form.make,
       model: form.model,
-      year: form.year,
-      trim: form.trim,
-      vin: form.vin,
-      mileage: form.mileage,
+      year: parseInt(form.year),
+      trim: form.trim || undefined,
+      vin: form.vin || undefined,
+      mileage: parseInt(form.mileage) || 0,
       condition: form.condition,
       transmission: form.transmission,
       fuelType: form.fuelType,
@@ -118,50 +84,74 @@ export default function SellCarPage() {
       driveType: form.driveType,
       engineSize: form.engineSize,
       cylinders: form.cylinders,
-      horsepower: form.horsepower.toString(),
-      color: form.exteriorColor || form.color,
+      horsepower: form.horsepower || undefined,
+      color: form.color,
       interiorColor: form.interiorColor,
       doors: form.doors,
       features: form.features,
-      price: form.price,
+      price: parseInt(form.price) || 0,
       negotiable: form.negotiable,
       description: form.description,
       location: form.location,
       sellerName: form.sellerName,
-      sellerContact: form.sellerPhone,
+      sellerContact: form.sellerContact,
       sellerEmail: form.sellerEmail,
       images: form.images,
       createdAt: Date.now(),
       sellerId: user?.id || 'anonymous',
     };
-    addListing(listing);
+
+    if (mode === 'sale') {
+      addListing(baseData);
+    } else {
+      const startingBid = parseInt(form.startingBid) || parseInt(form.price) || 0;
+      const auctionData: AuctionListing = {
+        ...baseData,
+        reservePrice: parseInt(form.reservePrice) || startingBid,
+        startingBid,
+        currentBid: startingBid,
+        currentBidder: '',
+        currentBidderName: 'No bids yet',
+        auctionDurationHours: form.auctionDurationHours,
+        auctionEndTime: Date.now() + form.auctionDurationHours * 3600000,
+        auctionActive: true,
+        bids: [],
+      };
+      addAuction(auctionData);
+    }
+
     setSubmitted(true);
   };
 
   const inputClass = 'w-full px-3 py-2 rounded text-sm outline-none focus:ring-1';
   const inputStyle = { backgroundColor: '#111125', border: '1px solid rgba(201,162,39,0.3)', color: '#e8e8e8' };
-  const labelClass = 'block text-sm font-semibold mb-1';
-  const labelStyle = { color: '#c9a227' };
-
-  const totalSteps = 4;
+  const labelStyle = { color: '#a0a0a0' };
 
   if (submitted) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <CheckCircle2 size={64} className="mx-auto mb-4" style={{ color: '#44ff44' }} />
-        <h2 className="text-3xl font-bold mb-4" style={{ color: '#c9a227', fontFamily: 'Georgia, serif' }}>Listing Submitted!</h2>
-        <p className="mb-8" style={{ color: '#a0a0a0' }}>Your vehicle has been listed on VCCP. Buyers can now contact you directly.</p>
-        <div className="flex flex-wrap justify-center gap-4">
+        <div className="text-6xl mb-4">🏆</div>
+        <h2 className="text-3xl font-bold mb-4" style={{ color: '#c9a227', fontFamily: 'Georgia, serif' }}>
+          {mode === 'sale' ? 'Listing Submitted!' : 'Auction Created!'}
+        </h2>
+        <p className="mb-8" style={{ color: '#a0a0a0' }}>
+          Your {form.year} {form.make} {form.model} has been {mode === 'sale' ? 'listed for sale' : 'listed for auction'}.
+        </p>
+        <div className="flex justify-center gap-4">
           <button
-            onClick={() => navigate('/browse')}
-            className="px-6 py-3 rounded-lg font-semibold"
+            onClick={() => navigate(mode === 'sale' ? '/browse' : '/auction')}
+            className="px-6 py-3 rounded font-bold"
             style={{ backgroundColor: '#c9a227', color: '#1a1a2e' }}
-          >View Listings</button>
+          >
+            View Listings
+          </button>
           <button
-            onClick={() => { setSubmitted(false); setStep(1); setForm(defaultForm); }}
-            className="px-6 py-3 rounded-lg font-semibold border"
-            style={{ borderColor: '#C9A84C', color: '#C9A84C' }}
-          >List Another</button>
+            onClick={() => { setSubmitted(false); setStep(1); setForm((prev) => ({ ...prev, make: '', model: '', year: new Date().getFullYear().toString() })); }}
+            className="px-6 py-3 rounded font-bold"
+            style={{ border: '2px solid #c9a227', color: '#c9a227' }}
+          >
+            List Another
+          </button>
         </div>
       </div>
     );
@@ -170,182 +160,234 @@ export default function SellCarPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-2" style={{ color: '#c9a227', fontFamily: 'Georgia, serif' }}>List Your Classic Car</h1>
-      <p className="text-sm mb-6" style={{ color: '#a0a0a0' }}>Step {step} of {totalSteps}</p>
+      <p className="text-sm mb-6" style={{ color: '#a0a0a0' }}>Fill in the details below to list your vintage automobile.</p>
+      <div className="ornament-line mb-8"></div>
 
-      {/* Progress */}
-      <div className="flex gap-1 mb-8">
-        {Array.from({ length: totalSteps }, (_, i) => (
-          <div key={i} className="flex-1 h-1 rounded" style={{ backgroundColor: i < step ? '#c9a227' : '#333' }} />
+      {/* Mode Toggle */}
+      <div className="flex gap-3 mb-8">
+        <button
+          onClick={() => setMode('sale')}
+          className="flex-1 py-3 rounded font-bold flex items-center justify-center gap-2"
+          style={{
+            backgroundColor: mode === 'sale' ? '#c9a227' : '#1e1e32',
+            color: mode === 'sale' ? '#1a1a2e' : '#e8e8e8',
+            border: '2px solid ' + (mode === 'sale' ? '#c9a227' : 'rgba(201,162,39,0.3)'),
+          }}
+        >
+          <Car size={18} /> List for Sale
+        </button>
+        <button
+          onClick={() => setMode('auction')}
+          className="flex-1 py-3 rounded font-bold flex items-center justify-center gap-2"
+          style={{
+            backgroundColor: mode === 'auction' ? '#c9a227' : '#1e1e32',
+            color: mode === 'auction' ? '#1a1a2e' : '#e8e8e8',
+            border: '2px solid ' + (mode === 'auction' ? '#c9a227' : 'rgba(201,162,39,0.3)'),
+          }}
+        >
+          <Gavel size={18} /> Create Auction
+        </button>
+      </div>
+
+      {/* Steps */}
+      <div className="flex gap-2 mb-8">
+        {[1, 2, 3, 4].map((s) => (
+          <div
+            key={s}
+            className="flex-1 h-2 rounded-full transition-all"
+            style={{ backgroundColor: step >= s ? '#c9a227' : 'rgba(201,162,39,0.2)' }}
+          />
         ))}
       </div>
 
+      {/* Step 1: Basic Info */}
       {step === 1 && (
         <div className="space-y-4">
-          <h2 className="text-xl font-bold mb-4" style={{ color: '#e8e8e8' }}>Basic Information</h2>
-
-          <div>
-            <label className={labelClass} style={labelStyle}>Listing Title (optional)</label>
-            <input className={inputClass} style={inputStyle} placeholder={`${form.year} ${form.make} ${form.model}`} value={form.title} onChange={e => set('title', e.target.value)} />
-          </div>
-
+          <h2 className="text-xl font-bold mb-4" style={{ color: '#e8e8e8' }}>Vehicle Information</h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelClass} style={labelStyle}>Make *</label>
-              <select className={inputClass} style={inputStyle} value={form.make} onChange={e => set('make', e.target.value as string)}>
+              <label className="block text-xs mb-1" style={labelStyle}>Make *</label>
+              <select value={form.make} onChange={(e: any) => update('make', e.target.value)} className={inputClass} style={inputStyle}>
                 <option value="">Select Make</option>
-                {CAR_MAKES.map(m => <option key={m} value={m}>{m}</option>)}
+                {CAR_MAKES.map((m) => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
             <div>
-              <label className={labelClass} style={labelStyle}>Model *</label>
-              <input className={inputClass} style={inputStyle} placeholder="e.g. Mustang" value={form.model} onChange={e => set('model', e.target.value)} />
+              <label className="block text-xs mb-1" style={labelStyle}>Model *</label>
+              <input type="text" value={form.model} onChange={(e: any) => update('model', e.target.value)} placeholder="e.g. Mustang" className={inputClass} style={inputStyle} />
             </div>
           </div>
-
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelClass} style={labelStyle}>Year *</label>
-              <input type="number" className={inputClass} style={inputStyle} value={form.year} onChange={e => set('year', parseInt(e.target.value) || 1965)} />
+              <label className="block text-xs mb-1" style={labelStyle}>Year *</label>
+              <input type="number" value={form.year} onChange={(e: any) => update('year', e.target.value)} min="1900" max="1990" className={inputClass} style={inputStyle} />
             </div>
             <div>
-              <label className={labelClass} style={labelStyle}>Trim</label>
-              <input className={inputClass} style={inputStyle} placeholder="e.g. Fastback" value={form.trim} onChange={e => set('trim', e.target.value)} />
+              <label className="block text-xs mb-1" style={labelStyle}>Trim / Variant</label>
+              <input type="text" value={form.trim} onChange={(e: any) => update('trim', e.target.value)} placeholder="e.g. GT, Z/28" className={inputClass} style={inputStyle} />
             </div>
           </div>
-
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelClass} style={labelStyle}>Mileage *</label>
-              <input type="number" className={inputClass} style={inputStyle} value={form.mileage} onChange={e => set('mileage', parseInt(e.target.value) || 0)} />
+              <label className="block text-xs mb-1" style={labelStyle}>VIN</label>
+              <input type="text" value={form.vin} onChange={(e: any) => update('vin', e.target.value)} placeholder="Vehicle ID Number" className={inputClass} style={inputStyle} />
             </div>
             <div>
-              <label className={labelClass} style={labelStyle}>VIN</label>
-              <input className={inputClass} style={inputStyle} placeholder="Vehicle Identification Number" value={form.vin} onChange={e => set('vin', e.target.value)} />
+              <label className="block text-xs mb-1" style={labelStyle}>Mileage *</label>
+              <input type="number" value={form.mileage} onChange={(e: any) => update('mileage', e.target.value)} placeholder="e.g. 45000" className={inputClass} style={inputStyle} />
             </div>
           </div>
-
           <div>
-            <label className={labelClass} style={labelStyle}>Location *</label>
-            <input className={inputClass} style={inputStyle} placeholder="City, State" value={form.location} onChange={e => set('location', e.target.value)} />
+            <label className="block text-xs mb-1" style={labelStyle}>Condition *</label>
+            <select value={form.condition} onChange={(e: any) => update('condition', e.target.value)} className={inputClass} style={inputStyle}>
+              {CONDITIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs mb-1" style={labelStyle}>Location *</label>
+              <input type="text" value={form.location} onChange={(e: any) => update('location', e.target.value)} placeholder="City, State" className={inputClass} style={inputStyle} />
+            </div>
+            <div>
+              <label className="block text-xs mb-1" style={labelStyle}>Body Style</label>
+              <select value={form.bodyStyle} onChange={(e: any) => update('bodyStyle', e.target.value)} className={inputClass} style={inputStyle}>
+                {BODY_STYLES.map((b) => <option key={b} value={b}>{b}</option>)}
+              </select>
+            </div>
           </div>
         </div>
       )}
 
+      {/* Step 2: Engine & Specs */}
       {step === 2 && (
         <div className="space-y-4">
-          <h2 className="text-xl font-bold mb-4" style={{ color: '#e8e8e8' }}>Vehicle Specifications</h2>
-
+          <h2 className="text-xl font-bold mb-4" style={{ color: '#e8e8e8' }}>Engine & Specifications</h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelClass} style={labelStyle}>Condition *</label>
-              <select className={inputClass} style={inputStyle} value={form.condition} onChange={e => set('condition', e.target.value as CarCondition)}>
-                {CONDITIONS.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+              <label className="block text-xs mb-1" style={labelStyle}>Engine Size</label>
+              <input type="text" value={form.engineSize} onChange={(e: any) => update('engineSize', e.target.value)} placeholder="e.g. 4.7L" className={inputClass} style={inputStyle} />
             </div>
             <div>
-              <label className={labelClass} style={labelStyle}>Body Style *</label>
-              <select className={inputClass} style={inputStyle} value={form.bodyStyle} onChange={e => set('bodyStyle', e.target.value as CarBodyStyle)}>
-                {BODY_STYLES.map(b => <option key={b} value={b}>{b}</option>)}
+              <label className="block text-xs mb-1" style={labelStyle}>Cylinders</label>
+              <select value={form.cylinders} onChange={(e: any) => update('cylinders', e.target.value)} className={inputClass} style={inputStyle}>
+                {CYLINDER_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
           </div>
-
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelClass} style={labelStyle}>Transmission *</label>
-              <select className={inputClass} style={inputStyle} value={form.transmission} onChange={e => set('transmission', e.target.value as CarTransmission)}>
-                {TRANSMISSIONS.map(t => <option key={t} value={t}>{t}</option>)}
+              <label className="block text-xs mb-1" style={labelStyle}>Transmission</label>
+              <select value={form.transmission} onChange={(e: any) => update('transmission', e.target.value)} className={inputClass} style={inputStyle}>
+                {TRANSMISSIONS.map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
             <div>
-              <label className={labelClass} style={labelStyle}>Fuel Type *</label>
-              <select className={inputClass} style={inputStyle} value={form.fuelType} onChange={e => set('fuelType', e.target.value as CarFuelType)}>
-                {FUEL_TYPES.map(f => <option key={f} value={f}>{f}</option>)}
+              <label className="block text-xs mb-1" style={labelStyle}>Drive Type</label>
+              <select value={form.driveType} onChange={(e: any) => update('driveType', e.target.value)} className={inputClass} style={inputStyle}>
+                {DRIVE_TYPES.map((d) => <option key={d} value={d}>{d}</option>)}
               </select>
             </div>
           </div>
-
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelClass} style={labelStyle}>Drive Type *</label>
-              <select className={inputClass} style={inputStyle} value={form.driveType} onChange={e => set('driveType', e.target.value as CarDriveType)}>
-                {DRIVE_TYPES.map(d => <option key={d} value={d}>{d}</option>)}
+              <label className="block text-xs mb-1" style={labelStyle}>Fuel Type</label>
+              <select value={form.fuelType} onChange={(e: any) => update('fuelType', e.target.value)} className={inputClass} style={inputStyle}>
+                {FUEL_TYPES.map((f) => <option key={f} value={f}>{f}</option>)}
               </select>
             </div>
             <div>
-              <label className={labelClass} style={labelStyle}>Doors</label>
-              <select className={inputClass} style={inputStyle} value={form.doors} onChange={e => set('doors', e.target.value)}>
-                {DOOR_OPTIONS.map(d => <option key={d} value={d}>{d}</option>)}
+              <label className="block text-xs mb-1" style={labelStyle}>Horsepower</label>
+              <input type="text" value={form.horsepower} onChange={(e: any) => update('horsepower', e.target.value)} placeholder="e.g. 320" className={inputClass} style={inputStyle} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs mb-1" style={labelStyle}>Doors</label>
+              <select value={form.doors} onChange={(e: any) => update('doors', e.target.value)} className={inputClass} style={inputStyle}>
+                {DOOR_OPTIONS.map((d) => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs mb-1" style={labelStyle}>Exterior Color</label>
+              <select value={form.color} onChange={(e: any) => update('color', e.target.value)} className={inputClass} style={inputStyle}>
+                <option value="">Select Color</option>
+                {EXTERIOR_COLORS.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass} style={labelStyle}>Engine Size</label>
-              <input className={inputClass} style={inputStyle} placeholder="e.g. 4.7L" value={form.engineSize} onChange={e => set('engineSize', e.target.value)} />
-            </div>
-            <div>
-              <label className={labelClass} style={labelStyle}>Cylinders</label>
-              <select className={inputClass} style={inputStyle} value={form.cylinders} onChange={e => set('cylinders', e.target.value)}>
-                <option value="">Select</option>
-                {CYLINDER_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass} style={labelStyle}>Exterior Color</label>
-              <input className={inputClass} style={inputStyle} placeholder="e.g. Highland Green" value={form.exteriorColor} onChange={e => set('exteriorColor', e.target.value)} />
-            </div>
-            <div>
-              <label className={labelClass} style={labelStyle}>Interior Color</label>
-              <input className={inputClass} style={inputStyle} placeholder="e.g. Black" value={form.interiorColor} onChange={e => set('interiorColor', e.target.value)} />
-            </div>
-          </div>
-
           <div>
-            <label className={labelClass} style={labelStyle}>Horsepower</label>
-            <input type="number" className={inputClass} style={inputStyle} value={form.horsepower} onChange={e => set('horsepower', parseInt(e.target.value) || 0)} />
+            <label className="block text-xs mb-1" style={labelStyle}>Interior Color</label>
+            <select value={form.interiorColor} onChange={(e: any) => update('interiorColor', e.target.value)} className={inputClass} style={inputStyle}>
+              <option value="">Select Interior Color</option>
+              {INTERIOR_COLORS.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
           </div>
         </div>
       )}
 
+      {/* Step 3: Price, Description & Features */}
       {step === 3 && (
         <div className="space-y-4">
-          <h2 className="text-xl font-bold mb-4" style={{ color: '#e8e8e8' }}>Description & Features</h2>
+          <h2 className="text-xl font-bold mb-4" style={{ color: '#e8e8e8' }}>Pricing & Description</h2>
+
+          {mode === 'sale' ? (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs mb-1" style={labelStyle}>Asking Price ($) *</label>
+                <input type="number" value={form.price} onChange={(e: any) => update('price', e.target.value)} placeholder="e.g. 45000" className={inputClass} style={inputStyle} />
+              </div>
+              <div className="flex items-center gap-2 pt-5">
+                <input type="checkbox" id="negotiable" checked={form.negotiable} onChange={(e: any) => update('negotiable', e.target.checked)} className="w-4 h-4" style={{ accentColor: '#c9a227' }} />
+                <label htmlFor="negotiable" className="text-sm" style={{ color: '#e8e8e8' }}>Price is negotiable</label>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs mb-1" style={labelStyle}>Starting Bid ($) *</label>
+                  <input type="number" value={form.startingBid} onChange={(e: any) => update('startingBid', e.target.value)} placeholder="e.g. 50000" className={inputClass} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-xs mb-1" style={labelStyle}>Reserve Price ($)</label>
+                  <input type="number" value={form.reservePrice} onChange={(e: any) => update('reservePrice', e.target.value)} placeholder="Minimum acceptable" className={inputClass} style={inputStyle} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs mb-1" style={labelStyle}>Auction Duration</label>
+                <select value={form.auctionDurationHours} onChange={(e: any) => update('auctionDurationHours', parseInt(e.target.value))} className={inputClass} style={inputStyle}>
+                  {AUCTION_DURATIONS.map((d) => <option key={d.hours} value={d.hours}>{d.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs mb-1" style={labelStyle}>Estimated Value ($)</label>
+                <input type="number" value={form.price} onChange={(e: any) => update('price', e.target.value)} placeholder="Estimated value" className={inputClass} style={inputStyle} />
+              </div>
+            </div>
+          )}
 
           <div>
-            <label className={labelClass} style={labelStyle}>Price (USD) *</label>
-            <input type="number" className={inputClass} style={inputStyle} value={form.price} onChange={e => set('price', parseInt(e.target.value) || 0)} />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <input type="checkbox" id="negotiable" checked={form.negotiable} onChange={e => set('negotiable', e.target.checked)} />
-            <label htmlFor="negotiable" className="text-sm" style={{ color: '#e8e8e8' }}>Price is negotiable</label>
-          </div>
-
-          <div>
-            <label className={labelClass} style={labelStyle}>Description *</label>
+            <label className="block text-xs mb-1" style={labelStyle}>Description *</label>
             <textarea
-              className={inputClass}
-              style={{ ...inputStyle, minHeight: '120px' }}
-              placeholder="Describe the vehicle's history, condition, modifications, etc."
               value={form.description}
-              onChange={e => set('description', e.target.value)}
+              onChange={(e: any) => update('description', e.target.value)}
+              rows={5}
+              placeholder="Describe the vehicle's history, condition, restoration details, etc."
+              className={inputClass}
+              style={{ ...inputStyle, resize: 'vertical' }}
             />
           </div>
 
           <div>
-            <label className={labelClass} style={labelStyle}>Features & Options</label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
-              {CAR_FEATURES.map(feature => (
-                <label key={feature} className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: '#e8e8e8' }}>
+            <label className="block text-xs mb-2" style={labelStyle}>Features & Options</label>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-60 overflow-y-auto p-2 rounded" style={{ backgroundColor: '#111125', border: '1px solid rgba(201,162,39,0.2)' }}>
+              {CAR_FEATURES.map((feature) => (
+                <label key={feature} className="flex items-center gap-2 text-xs cursor-pointer p-1 rounded hover:bg-opacity-20" style={{ color: '#e8e8e8' }}>
                   <input
                     type="checkbox"
                     checked={form.features.includes(feature)}
                     onChange={() => toggleFeature(feature)}
+                    className="w-3 h-3"
                     style={{ accentColor: '#c9a227' }}
                   />
                   {feature}
@@ -356,65 +398,96 @@ export default function SellCarPage() {
         </div>
       )}
 
+      {/* Step 4: Seller Info & Images */}
       {step === 4 && (
         <div className="space-y-4">
-          <h2 className="text-xl font-bold mb-4" style={{ color: '#e8e8e8' }}>Contact Information</h2>
-
+          <h2 className="text-xl font-bold mb-4" style={{ color: '#e8e8e8' }}>Seller Information</h2>
           <div>
-            <label className={labelClass} style={labelStyle}>Your Name *</label>
-            <input className={inputClass} style={inputStyle} placeholder="Full Name" value={form.sellerName} onChange={e => set('sellerName', e.target.value)} />
+            <label className="block text-xs mb-1" style={labelStyle}>Your Name *</label>
+            <input type="text" value={form.sellerName} onChange={(e: any) => update('sellerName', e.target.value)} placeholder="Full name or business" className={inputClass} style={inputStyle} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs mb-1" style={labelStyle}>Email *</label>
+              <input type="email" value={form.sellerEmail} onChange={(e: any) => update('sellerEmail', e.target.value)} placeholder="your@email.com" className={inputClass} style={inputStyle} />
+            </div>
+            <div>
+              <label className="block text-xs mb-1" style={labelStyle}>Phone</label>
+              <input type="tel" value={form.sellerContact} onChange={(e: any) => update('sellerContact', e.target.value)} placeholder="(555) 555-5555" className={inputClass} style={inputStyle} />
+            </div>
           </div>
 
           <div>
-            <label className={labelClass} style={labelStyle}>Phone Number</label>
-            <input className={inputClass} style={inputStyle} placeholder="(555) 000-0000" value={form.sellerPhone} onChange={e => set('sellerPhone', e.target.value)} />
+            <label className="block text-xs mb-2" style={labelStyle}>Image URLs (one per line)</label>
+            <textarea
+              rows={4}
+              placeholder="https://example.com/car-photo.jpg"
+              onChange={(e: any) => {
+                const urls = e.target.value.split('\n').map((u: string) => u.trim()).filter((u: string) => u.length > 0);
+                update('images', urls);
+              }}
+              className={inputClass}
+              style={{ ...inputStyle, resize: 'vertical' }}
+            />
+            <p className="text-xs mt-1" style={{ color: '#666' }}>Enter one image URL per line</p>
           </div>
 
-          <div>
-            <label className={labelClass} style={labelStyle}>Email Address *</label>
-            <input className={inputClass} style={inputStyle} placeholder="your@email.com" value={form.sellerEmail} onChange={e => set('sellerEmail', e.target.value)} />
-          </div>
-
-          <div className="mt-6 p-4 rounded" style={{ backgroundColor: '#1e1e32', border: '1px solid rgba(201,162,39,0.2)' }}>
-            <h3 className="font-bold mb-3" style={{ color: '#c9a227' }}>Review Your Listing</h3>
-            <div className="text-sm space-y-1" style={{ color: '#a0a0a0' }}>
-              <p><span style={{ color: '#e8e8e8' }}>Vehicle:</span> {form.year} {form.make} {form.model} {form.trim}</p>
-              <p><span style={{ color: '#e8e8e8' }}>Condition:</span> {form.condition}</p>
-              <p><span style={{ color: '#e8e8e8' }}>Mileage:</span> {form.mileage.toLocaleString()} mi</p>
-              <p><span style={{ color: '#e8e8e8' }}>Price:</span> ${form.price.toLocaleString()}{form.negotiable ? ' (OBO)' : ''}</p>
-              <p><span style={{ color: '#e8e8e8' }}>Location:</span> {form.location}</p>
+          {/* Summary */}
+          <div className="p-4 rounded" style={{ backgroundColor: '#111125', border: '1px solid rgba(201,162,39,0.2)' }}>
+            <h4 className="font-bold mb-3" style={{ color: '#c9a227' }}>Listing Summary</h4>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div style={{ color: '#a0a0a0' }}>Vehicle:</div>
+              <div style={{ color: '#e8e8e8' }}>{form.year} {form.make} {form.model} {form.trim}</div>
+              <div style={{ color: '#a0a0a0' }}>Condition:</div>
+              <div style={{ color: '#e8e8e8' }}>{form.condition}</div>
+              <div style={{ color: '#a0a0a0' }}>Mileage:</div>
+              <div style={{ color: '#e8e8e8' }}>{parseInt(form.mileage || '0').toLocaleString()} mi</div>
+              {mode === 'sale' ? (
+                <>
+                  <div style={{ color: '#a0a0a0' }}>Price:</div>
+                  <div style={{ color: '#c9a227' }}>${parseInt(form.price || '0').toLocaleString()}</div>
+                </>
+              ) : (
+                <>
+                  <div style={{ color: '#a0a0a0' }}>Starting Bid:</div>
+                  <div style={{ color: '#c9a227' }}>${parseInt(form.startingBid || '0').toLocaleString()}</div>
+                  <div style={{ color: '#a0a0a0' }}>Duration:</div>
+                  <div style={{ color: '#e8e8e8' }}>{AUCTION_DURATIONS.find((d) => d.hours === form.auctionDurationHours)?.label}</div>
+                </>
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* Navigation Buttons */}
+      {/* Navigation */}
       <div className="flex justify-between mt-8">
         {step > 1 ? (
           <button
-            onClick={() => setStep(s => s - 1)}
-            className="flex items-center gap-2 px-5 py-2 rounded font-semibold"
+            onClick={() => setStep((s) => s - 1)}
+            className="px-6 py-2 rounded font-semibold"
             style={{ border: '1px solid rgba(201,162,39,0.4)', color: '#c9a227' }}
           >
-            <ChevronLeft size={16} /> Back
+            Back
           </button>
         ) : <div />}
-
-        {step < totalSteps ? (
+        {step < 4 ? (
           <button
-            onClick={() => setStep(s => s + 1)}
-            className="flex items-center gap-2 px-5 py-2 rounded font-semibold"
-            style={{ backgroundColor: '#c9a227', color: '#1a1a2e' }}
+            onClick={() => setStep((s) => s + 1)}
+            disabled={step === 1 && (!form.make || !form.model)}
+            className="px-6 py-2 rounded font-bold"
+            style={{ backgroundColor: '#c9a227', color: '#1a1a2e', opacity: (step === 1 && (!form.make || !form.model)) ? 0.5 : 1 }}
           >
-            Next <ChevronRight size={16} />
+            Next
           </button>
         ) : (
           <button
             onClick={handleSubmit}
-            className="flex items-center gap-2 px-6 py-2 rounded font-bold"
-            style={{ backgroundColor: '#c9a227', color: '#1a1a2e' }}
+            disabled={!form.sellerName || !form.sellerEmail}
+            className="px-8 py-2 rounded font-bold"
+            style={{ backgroundColor: '#c9a227', color: '#1a1a2e', opacity: (!form.sellerName || !form.sellerEmail) ? 0.5 : 1 }}
           >
-            <CheckCircle2 size={16} /> Submit Listing
+            {mode === 'sale' ? 'List for Sale' : 'Create Auction'}
           </button>
         )}
       </div>

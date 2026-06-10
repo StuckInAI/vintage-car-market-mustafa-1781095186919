@@ -17,7 +17,7 @@ export function formatCountdown(endTime: number): string {
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
-export function generateId(prefix: string): string {
+export function generateId(prefix: string = 'id'): string {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 

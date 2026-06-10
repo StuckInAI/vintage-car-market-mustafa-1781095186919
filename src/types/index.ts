@@ -1,9 +1,16 @@
-export type CarCondition = 'Excellent' | 'Good' | 'Fair' | 'Project';
-export type CarTransmission = 'Manual' | 'Automatic' | 'Semi-Automatic';
-export type CarFuelType = 'Gasoline' | 'Diesel' | 'Electric' | 'Hybrid' | 'Other';
-export type CarBodyStyle = 'Sedan' | 'Coupe' | 'Convertible' | 'Roadster' | 'SUV' | 'Truck' | 'Wagon' | 'Van' | 'Other';
-export type CarDriveType = 'RWD' | 'FWD' | 'AWD' | '4WD';
-export type CarDrivetrain = CarDriveType;
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  password: string;
+  role: 'buyer' | 'seller' | 'both';
+  createdAt: number;
+}
+
+export interface AuthState {
+  user: User | null;
+  isAuthenticated: boolean;
+}
 
 export interface CarListing {
   id: string;
@@ -11,17 +18,17 @@ export interface CarListing {
   make: string;
   model: string;
   year: number;
-  trim: string;
-  vin: string;
+  trim?: string;
+  vin?: string;
   mileage: number;
-  condition: CarCondition;
-  transmission: CarTransmission;
-  fuelType: CarFuelType;
-  bodyStyle: CarBodyStyle;
-  driveType: CarDriveType;
+  condition: string;
+  transmission: string;
+  fuelType: string;
+  bodyStyle: string;
+  driveType: string;
   engineSize: string;
   cylinders: string;
-  horsepower: string;
+  horsepower?: string;
   color: string;
   interiorColor: string;
   doors: string;
@@ -38,18 +45,6 @@ export interface CarListing {
   sellerId: string;
 }
 
-export interface AuctionListing extends CarListing {
-  reservePrice: number;
-  startingBid: number;
-  currentBid: number;
-  currentBidder: string;
-  currentBidderName: string;
-  auctionDurationHours: number;
-  auctionEndTime: number;
-  auctionActive: boolean;
-  bids: Bid[];
-}
-
 export interface Bid {
   id: string;
   bidderId: string;
@@ -58,18 +53,18 @@ export interface Bid {
   timestamp: number;
 }
 
-export interface User {
-  id: string;
-  username: string;
-  email: string;
-  password: string;
-  role: 'buyer' | 'seller' | 'admin';
-  createdAt: number;
-}
-
-export interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
+export interface AuctionListing extends CarListing {
+  reservePrice: number;
+  startingBid: number;
+  currentBid: number;
+  currentBidder: string;
+  currentBidderName: string;
+  highestBidderId?: string;
+  highestBidderName?: string;
+  auctionDurationHours: number;
+  auctionEndTime: number;
+  auctionActive: boolean;
+  bids: Bid[];
 }
 
 export interface FilterState {
@@ -85,8 +80,11 @@ export interface FilterState {
   transmission: string;
   fuelType: string;
   driveType: string;
+  drivetrain?: string;
   color: string;
   location: string;
   searchText: string;
-  trim?: string;
 }
+
+export type CarFilters = FilterState;
+export type SortOption = string;
