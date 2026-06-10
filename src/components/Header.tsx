@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, ChevronDown, LogOut, User, Gavel, Car } from 'lucide-react';
+import { Menu, X, LogOut, User, Gavel, Car } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import VCCPLogo from '@/components/VCCPLogo';
 

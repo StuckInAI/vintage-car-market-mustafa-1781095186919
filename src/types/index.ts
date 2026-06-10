@@ -1,38 +1,33 @@
 export type CarCondition = 'Excellent' | 'Good' | 'Fair' | 'Project';
-export type TransmissionType = 'Manual' | 'Automatic' | 'Semi-Automatic';
-export type FuelType = 'Gasoline' | 'Diesel' | 'Electric' | 'Hybrid' | 'Other';
-export type BodyStyle = 'Sedan' | 'Coupe' | 'Convertible' | 'Roadster' | 'SUV' | 'Truck' | 'Wagon' | 'Van' | 'Other';
-export type DriveType = 'RWD' | 'FWD' | 'AWD' | '4WD';
-export type ListingType = 'sale' | 'auction';
+export type CarTransmission = 'Manual' | 'Automatic' | 'Semi-Automatic';
+export type CarFuelType = 'Gasoline' | 'Diesel' | 'Electric' | 'Hybrid' | 'Other';
+export type CarBodyStyle = 'Sedan' | 'Coupe' | 'Convertible' | 'Roadster' | 'SUV' | 'Truck' | 'Wagon' | 'Van' | 'Other';
+export type CarDriveType = 'RWD' | 'FWD' | 'AWD' | '4WD';
+export type CarDrivetrain = CarDriveType;
 
 export interface CarListing {
   id: string;
-  listingType: ListingType;
-  // Basic Info
+  listingType: 'sale' | 'auction';
   make: string;
   model: string;
   year: number;
   trim: string;
   vin: string;
-  // Specs
   mileage: number;
   condition: CarCondition;
-  transmission: TransmissionType;
-  fuelType: FuelType;
-  bodyStyle: BodyStyle;
-  driveType: DriveType;
+  transmission: CarTransmission;
+  fuelType: CarFuelType;
+  bodyStyle: CarBodyStyle;
+  driveType: CarDriveType;
   engineSize: string;
   cylinders: string;
   horsepower: string;
   color: string;
   interiorColor: string;
   doors: string;
-  // Features
   features: string[];
-  // Pricing
   price: number;
   negotiable: boolean;
-  // Details
   description: string;
   location: string;
   sellerName: string;
@@ -40,12 +35,10 @@ export interface CarListing {
   sellerEmail: string;
   images: string[];
   createdAt: number;
-  // Seller auth
   sellerId: string;
 }
 
 export interface AuctionListing extends CarListing {
-  listingType: 'auction';
   reservePrice: number;
   startingBid: number;
   currentBid: number;
@@ -70,7 +63,7 @@ export interface User {
   username: string;
   email: string;
   password: string;
-  role: 'seller' | 'bidder' | 'both';
+  role: 'buyer' | 'seller' | 'admin';
   createdAt: number;
 }
 
@@ -79,7 +72,7 @@ export interface AuthState {
   isAuthenticated: boolean;
 }
 
-export type FilterState = {
+export interface FilterState {
   make: string;
   model: string;
   yearMin: string;
@@ -95,4 +88,5 @@ export type FilterState = {
   color: string;
   location: string;
   searchText: string;
-};
+  trim?: string;
+}

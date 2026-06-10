@@ -31,7 +31,6 @@ export default function Footer() {
               <li><Link to="/sell" className="hover:text-yellow-400">List Your Car</Link></li>
               <li><Link to="/auction" className="hover:text-yellow-400">Live Auctions</Link></li>
               <li><Link to="/auction/create" className="hover:text-yellow-400">Start Auction</Link></li>
-              <li><Link to="/auth" className="hover:text-yellow-400">Sign In</Link></li>
             </ul>
           </div>
           <div>
